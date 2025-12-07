@@ -78,12 +78,14 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         <Card>
           <CardHeader>
             <CardTitle>System Management</CardTitle>
+            <CardDescription>Manage doctors, appointments, and database</CardDescription>
           </CardHeader>
-          </CardHeader>
+          <CardContent>
             <Tabs defaultValue="doctors">
               <TabsList className="grid w-full grid-cols-3">
-                  <Stethoscope size={18} className="mr-2" />
                 <TabsTrigger value="doctors">
+                  <Stethoscope size={18} className="mr-2" />
+                  Manage Doctors
                 </TabsTrigger>
                 <TabsTrigger value="appointments">
                   <CalendarDots size={18} className="mr-2" />
@@ -91,25 +93,25 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 </TabsTrigger>
                 <TabsTrigger value="database">
                   <Database size={18} className="mr-2" />
+                  Database
                 </TabsTrigger>
               </TabsList>
-
-              <TabsContent value="doctors" className="mt-6">
-              </TabsList>ctors />
 
               <TabsContent value="doctors" className="mt-6">
                 <ManageDoctors />
               </TabsContent>
 
-
-              <TabsContent value="database" className="mt-6">
-                <DatabaseStatus />
+              <TabsContent value="appointments" className="mt-6">
+                <ViewAllAppointments />
+              </TabsContent>
 
               <TabsContent value="database" className="mt-6">
                 <DatabaseStatus />
               </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </main>
     </div>
   )
 }
-  )}
