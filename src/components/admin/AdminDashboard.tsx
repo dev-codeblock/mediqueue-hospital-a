@@ -4,9 +4,10 @@ import { User, Doctor, Appointment } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { SignOut, Users, CalendarDots, Stethoscope } from '@phosphor-icons/react'
+import { SignOut, Users, CalendarDots, Stethoscope, Database } from '@phosphor-icons/react'
 import ManageDoctors from './ManageDoctors'
 import ViewAllAppointments from './ViewAllAppointments'
+import DatabaseStatus from './DatabaseStatus'
 
 interface AdminDashboardProps {
   user: User
@@ -77,11 +78,11 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         <Card>
           <CardHeader>
             <CardTitle>System Management</CardTitle>
-            <CardDescription>Manage doctors and view all appointments</CardDescription>
+            <CardDescription>Manage doctors, appointments, and database</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="doctors">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="doctors">
                   <Stethoscope size={18} className="mr-2" />
                   Manage Doctors
@@ -89,6 +90,10 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 <TabsTrigger value="appointments">
                   <CalendarDots size={18} className="mr-2" />
                   All Appointments
+                </TabsTrigger>
+                <TabsTrigger value="database">
+                  <Database size={18} className="mr-2" />
+                  Database
                 </TabsTrigger>
               </TabsList>
 
@@ -98,6 +103,10 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
               <TabsContent value="appointments" className="mt-6">
                 <ViewAllAppointments />
+              </TabsContent>
+
+              <TabsContent value="database" className="mt-6">
+                <DatabaseStatus />
               </TabsContent>
             </Tabs>
           </CardContent>

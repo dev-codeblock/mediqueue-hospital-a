@@ -47,6 +47,11 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
     setSelectedTime('')
   }
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date)
+    setSelectedTime('')
+  }
+
   const handleBookAppointment = () => {
     if (!selectedDoctor || !selectedDate || !selectedTime) {
       toast.error('Please select all required fields')
@@ -89,7 +94,10 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
   }
 
   const isDateDisabled = (date: Date) => {
-    if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (date < today) {
       return true
     }
     if (!selectedDoctor) {
@@ -178,8 +186,9 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={handleDateSelect}
                 disabled={isDateDisabled}
+                fromDate={new Date()}
                 className="rounded-md border"
               />
             </div>

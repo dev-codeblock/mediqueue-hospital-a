@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { User } from './lib/types'
+import { initializeDatabase } from './lib/database'
 import LoginPage from './components/auth/LoginPage'
 import PatientDashboard from './components/patient/PatientDashboard'
 import DoctorDashboard from './components/doctor/DoctorDashboard'
@@ -9,9 +10,27 @@ import { Toaster } from './components/ui/sonner'
 
 function App() {
   const [currentUser, setCurrentUser] = useKV<User | null>('current-user', null)
+  const [isDbReady, setIsDbReady] = useState(false)
+
+  useEffect(() => {
+    initializeDatabase().then(() => {
+      setIsDbReady(true)
+    })
+  }, [])
 
   const handleLogout = () => {
     setCurrentUser(null)
+  }
+
+  if (!isDbReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading CareConnect...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!currentUser) {

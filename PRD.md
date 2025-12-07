@@ -1,6 +1,6 @@
 # Planning Guide
 
-CareConnect is a comprehensive online hospital appointment system that eliminates double-booking, reduces wait times, and streamlines the connection between patients, doctors, and administrators through intelligent scheduling and real-time availability management.
+CareConnect is a comprehensive online hospital appointment system that eliminates double-booking, reduces wait times, and streamlines the connection between patients, doctors, and administrators through intelligent scheduling and real-time availability management. The application uses a persistent key-value database (Spark KV) to store all users, doctors, and appointments with automatic initialization of seed data.
 
 **Experience Qualities**: 
 1. **Professional** - Instills trust through a clean, medical-grade interface that feels reliable and authoritative
@@ -8,7 +8,24 @@ CareConnect is a comprehensive online hospital appointment system that eliminate
 3. **Transparent** - Provides complete visibility into doctor availability, appointment status, and scheduling conflicts with honest, upfront communication
 
 **Complexity Level**: Complex Application (advanced functionality, likely with multiple views)
-This system requires sophisticated role-based access control (patient/doctor/admin), real-time slot availability checking, multi-view dashboards for different user types, appointment state management, and comprehensive notification systems—all requiring persistent data storage and complex state coordination.
+This system requires sophisticated role-based access control (patient/doctor/admin), real-time slot availability checking, multi-view dashboards for different user types, appointment state management, comprehensive notification systems, and persistent database storage—all requiring complex state coordination and data persistence.
+
+## Data Persistence Architecture
+
+The application uses Spark KV (key-value store) as its persistent database with the following structure:
+
+- **users**: Array of User objects containing patient, doctor, and admin accounts
+- **doctors**: Array of Doctor objects with schedules, specializations, and availability
+- **appointments**: Array of Appointment objects tracking all bookings
+- **current-user**: Currently authenticated user session
+- **db-initialized**: Flag to prevent duplicate initialization
+
+On first load, the system automatically seeds the database with:
+- 3 demo users (1 admin, 1 doctor, 1 patient)
+- 5 doctors across different specializations with varied schedules
+- Empty appointments array ready for bookings
+
+All data modifications use functional updates with useKV hook to prevent race conditions and ensure data consistency.
 
 ## Essential Features
 

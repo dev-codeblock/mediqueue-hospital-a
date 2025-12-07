@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { User, UserRole } from '@/lib/types'
 import { generateId } from '@/lib/appointment-utils'
+import { addUser } from '@/lib/database'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,7 +39,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     onLogin(user)
   }
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const existingUser = users?.find((u) => u.email === registerEmail)
@@ -54,6 +55,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       role: 'patient',
     }
 
+    await addUser(newUser)
     toast.success('Registration successful! Logging you in...')
     onLogin(newUser)
   }
