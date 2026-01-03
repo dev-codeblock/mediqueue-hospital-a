@@ -14,4 +14,12 @@ export default defineConfig({
       "@": resolve(projectRoot, "src"),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
+  },
 });
