@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/use-kv'
 import { User, UserRole } from '@/lib/types'
 import { generateId } from '@/lib/appointment-utils'
 import { addUser } from '@/lib/database'
@@ -63,11 +63,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-primary">
             <Stethoscope size={32} weight="bold" className="text-primary-foreground" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">CareConnect</h1>
+          <h1 className="mb-2 text-4xl font-bold text-foreground">CareConnect</h1>
           <p className="text-muted-foreground">Your health, simplified</p>
         </div>
 
@@ -155,9 +155,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               </TabsContent>
             </Tabs>
 
-            <div className="mt-6 p-4 bg-secondary rounded-lg">
-              <p className="text-sm font-semibold mb-2">Demo Accounts:</p>
-              <div className="text-xs space-y-1 text-muted-foreground">
+            <div className="p-4 mt-6 rounded-lg bg-secondary">
+              <p className="mb-2 text-sm font-semibold">Demo Accounts:</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
                 <p>Doctor: doctor@care.com</p>
                 <p>Admin: admin@care.com</p>
               </div>

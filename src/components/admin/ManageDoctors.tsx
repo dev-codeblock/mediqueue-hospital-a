@@ -1,46 +1,72 @@
-import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
-import { Doctor } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Checkbox } from '@/components/ui/checkbox'
-import { toast } from 'sonner'
-import { generateId, SPECIALIZATIONS, DEFAULT_TIME_SLOTS, DAYS_OF_WEEK } from '@/lib/appointment-utils'
-import { Plus, Pencil, Trash } from '@phosphor-icons/react'
+import { useState } from "react";
+import { useKV } from "@/hooks/use-kv";
+import { Doctor } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import {
+  generateId,
+  SPECIALIZATIONS,
+  DEFAULT_TIME_SLOTS,
+  DAYS_OF_WEEK,
+} from "@/lib/appointment-utils";
+import { Plus, Pencil, Trash } from "@phosphor-icons/react";
 
 export default function ManageDoctors() {
-  const [doctors, setDoctors] = useKV<Doctor[]>('doctors', [])
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
+  const [doctors, setDoctors] = useKV<Doctor[]>("doctors", []);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
 
-  const handleAddDoctor = (doctor: Omit<Doctor, 'id'>) => {
+  const handleAddDoctor = (doctor: Omit<Doctor, "id">) => {
     const newDoctor: Doctor = {
       ...doctor,
       id: generateId(),
-    }
-    setDoctors((current) => [...(current || []), newDoctor])
-    toast.success('Doctor added successfully')
-    setIsAddDialogOpen(false)
-  }
+    };
+    setDoctors((current) => [...(current || []), newDoctor]);
+    toast.success("Doctor added successfully");
+    setIsAddDialogOpen(false);
+  };
 
   const handleUpdateDoctor = (updatedDoctor: Doctor) => {
     setDoctors((current) =>
-      (current || []).map((d) => (d.id === updatedDoctor.id ? updatedDoctor : d))
-    )
-    toast.success('Doctor updated successfully')
-    setEditingDoctor(null)
-  }
+      (current || []).map((d) =>
+        d.id === updatedDoctor.id ? updatedDoctor : d
+      )
+    );
+    toast.success("Doctor updated successfully");
+    setEditingDoctor(null);
+  };
 
   const handleDeleteDoctor = (doctorId: string) => {
-    setDoctors((current) => (current || []).filter((d) => d.id !== doctorId))
-    toast.success('Doctor removed')
-  }
+    setDoctors((current) => (current || []).filter((d) => d.id !== doctorId));
+    toast.success("Doctor removed");
+  };
 
   return (
     <div className="space-y-6">
@@ -67,10 +93,12 @@ export default function ManageDoctors() {
         </Dialog>
       </div>
 
-      {(!doctors || doctors.length === 0) ? (
+      {!doctors || doctors.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No doctors added yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Click "Add Doctor" to get started</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Click "Add Doctor" to get started
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -86,7 +114,9 @@ export default function ManageDoctors() {
                     </Avatar>
                     <div className="flex-1">
                       <CardTitle className="text-base">{doctor.name}</CardTitle>
-                      <CardDescription className="text-xs">{doctor.email}</CardDescription>
+                      <CardDescription className="text-xs">
+                        {doctor.email}
+                      </CardDescription>
                       <Badge className="mt-2" variant="secondary">
                         {doctor.specialization}
                       </Badge>
@@ -119,7 +149,9 @@ export default function ManageDoctors() {
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Edit Doctor</DialogTitle>
-                        <DialogDescription>Update doctor details and availability</DialogDescription>
+                        <DialogDescription>
+                          Update doctor details and availability
+                        </DialogDescription>
                       </DialogHeader>
                       <DoctorForm
                         initialData={doctor}
@@ -141,39 +173,41 @@ export default function ManageDoctors() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface DoctorFormProps {
-  initialData?: Doctor
-  onSubmit: (doctor: any) => void
+  initialData?: Doctor;
+  onSubmit: (doctor: any) => void;
 }
 
 function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
-  const [name, setName] = useState(initialData?.name || '')
-  const [email, setEmail] = useState(initialData?.email || '')
-  const [specialization, setSpecialization] = useState(initialData?.specialization || '')
+  const [name, setName] = useState(initialData?.name || "");
+  const [email, setEmail] = useState(initialData?.email || "");
+  const [specialization, setSpecialization] = useState(
+    initialData?.specialization || ""
+  );
   const [maxAppointments, setMaxAppointments] = useState(
-    initialData?.maxAppointmentsPerDay.toString() || '10'
-  )
+    initialData?.maxAppointmentsPerDay.toString() || "10"
+  );
   const [selectedDays, setSelectedDays] = useState<number[]>(
     initialData?.availableDays || [1, 2, 3, 4, 5]
-  )
+  );
   const [selectedSlots, setSelectedSlots] = useState<string[]>(
     initialData?.availableTimeSlots || DEFAULT_TIME_SLOTS
-  )
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (selectedDays.length === 0) {
-      toast.error('Please select at least one available day')
-      return
+      toast.error("Please select at least one available day");
+      return;
     }
 
     if (selectedSlots.length === 0) {
-      toast.error('Please select at least one time slot')
-      return
+      toast.error("Please select at least one time slot");
+      return;
     }
 
     const doctorData = {
@@ -185,22 +219,26 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
       availableDays: selectedDays,
       availableTimeSlots: selectedSlots,
       unavailableDates: initialData?.unavailableDates || [],
-    }
+    };
 
-    onSubmit(doctorData)
-  }
+    onSubmit(doctorData);
+  };
 
   const toggleDay = (day: number) => {
     setSelectedDays((current) =>
-      current.includes(day) ? current.filter((d) => d !== day) : [...current, day]
-    )
-  }
+      current.includes(day)
+        ? current.filter((d) => d !== day)
+        : [...current, day]
+    );
+  };
 
   const toggleSlot = (slot: string) => {
     setSelectedSlots((current) =>
-      current.includes(slot) ? current.filter((s) => s !== slot) : [...current, slot]
-    )
-  }
+      current.includes(slot)
+        ? current.filter((s) => s !== slot)
+        : [...current, slot]
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -228,7 +266,11 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="doctor-spec">Specialization</Label>
-          <Select value={specialization} onValueChange={setSpecialization} required>
+          <Select
+            value={specialization}
+            onValueChange={setSpecialization}
+            required
+          >
             <SelectTrigger id="doctor-spec">
               <SelectValue placeholder="Choose specialization" />
             </SelectTrigger>
@@ -299,8 +341,8 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
       </div>
 
       <Button type="submit" className="w-full">
-        {initialData ? 'Update Doctor' : 'Add Doctor'}
+        {initialData ? "Update Doctor" : "Add Doctor"}
       </Button>
     </form>
-  )
+  );
 }
