@@ -1,110 +1,150 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { User, Doctor, Appointment } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar } from '@/components/ui/calendar'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { toast } from 'sonner'
-import { 
-  SPECIALIZATIONS, 
-  getAvailableSlots, 
-  canBookAppointment, 
-  generateId,
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { User, Doctor, Appointment } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import {
+  SPECIALIZATIONS,
   formatDate,
-  isDoctorAvailableOnDate 
-} from '@/lib/appointment-utils'
-import { MagnifyingGlass, Clock, CheckCircle, XCircle, Stethoscope } from '@phosphor-icons/react'
+  isDoctorAvailableOnDate,
+} from "@/lib/appointment-utils";
+import {
+  MagnifyingGlass,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Stethoscope,
+} from "@phosphor-icons/react";
+import { doctorsAPI, appointmentsAPI } from "@/lib/api-client";
 
 interface BookAppointmentProps {
-  user: User
+  user: User;
 }
 
 export default function BookAppointment({ user }: BookAppointmentProps) {
-  const [doctors] = useKV<Doctor[]>('doctors', [])
-  const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
-  
-  const [selectedSpecialization, setSelectedSpecialization] = useState<string>('')
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
-  const [selectedTime, setSelectedTime] = useState<string>('')
+  const queryClient = useQueryClient();
+
+  const { data: doctors = [], isLoading: loadingDoctors } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorsAPI.getAll(),
+  });
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: () => appointmentsAPI.getAll(),
+  });
+
+  const createAppointmentMutation = useMutation({
+    mutationFn: (data: { doctorId: string; date: string; time: string }) =>
+      appointmentsAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
+
+  const [selectedSpecialization, setSelectedSpecialization] =
+    useState<string>("");
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
   const filteredDoctors = selectedSpecialization
-    ? doctors?.filter((d) => d.specialization === selectedSpecialization) || []
-    : []
+    ? doctors.filter((d) => d.specialization === selectedSpecialization)
+    : [];
 
-  const availableSlots = selectedDoctor && selectedDate
-    ? getAvailableSlots(selectedDoctor, formatDate(selectedDate), appointments || [])
-    : []
+  const handleDoctorSelect = async (doctorId: string) => {
+    const doctor = doctors.find((d) => d.id === doctorId);
+    setSelectedDoctor(doctor || null);
+    setSelectedDate(undefined);
+    setSelectedTime("");
+    setAvailableSlots([]);
+  };
 
-  const handleDoctorSelect = (doctorId: string) => {
-    const doctor = doctors?.find((d) => d.id === doctorId)
-    setSelectedDoctor(doctor || null)
-    setSelectedDate(undefined)
-    setSelectedTime('')
-  }
+  const handleDateSelect = async (date: Date | undefined) => {
+    setSelectedDate(date);
+    setSelectedTime("");
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date)
-    setSelectedTime('')
-  }
+    if (date && selectedDoctor) {
+      try {
+        const slots = await doctorsAPI.getAvailableSlots(
+          selectedDoctor.id,
+          formatDate(date)
+        );
+        setAvailableSlots(slots);
+      } catch (error) {
+        toast.error("Failed to fetch available slots");
+        setAvailableSlots([]);
+      }
+    } else {
+      setAvailableSlots([]);
+    }
+  };
 
   const handleBookAppointment = () => {
     if (!selectedDoctor || !selectedDate || !selectedTime) {
-      toast.error('Please select all required fields')
-      return
+      toast.error("Please select all required fields");
+      return;
     }
 
-    const dateStr = formatDate(selectedDate)
-    const bookingCheck = canBookAppointment(
-      selectedDoctor,
-      dateStr,
-      selectedTime,
-      appointments || []
-    )
+    const dateStr = formatDate(selectedDate);
 
-    if (!bookingCheck.canBook) {
-      toast.error(bookingCheck.message || 'Cannot book appointment')
-      return
-    }
-
-    const newAppointment: Appointment = {
-      id: generateId(),
-      patientId: user.id,
-      patientName: user.name,
-      doctorId: selectedDoctor.id,
-      doctorName: selectedDoctor.name,
-      doctorSpecialization: selectedDoctor.specialization,
-      date: dateStr,
-      time: selectedTime,
-      status: 'pending',
-      createdAt: Date.now(),
-    }
-
-    setAppointments((current) => [...(current || []), newAppointment])
-    toast.success('Appointment request sent! Waiting for doctor approval.')
-
-    setSelectedSpecialization('')
-    setSelectedDoctor(null)
-    setSelectedDate(undefined)
-    setSelectedTime('')
-  }
+    createAppointmentMutation.mutate(
+      {
+        doctorId: selectedDoctor.id,
+        date: dateStr,
+        time: selectedTime,
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            "Appointment request sent! Waiting for doctor approval."
+          );
+          setSelectedSpecialization("");
+          setSelectedDoctor(null);
+          setSelectedDate(undefined);
+          setSelectedTime("");
+          setAvailableSlots([]);
+        },
+        onError: (error: any) => {
+          toast.error(
+            error.response?.data?.message || "Failed to book appointment"
+          );
+        },
+      }
+    );
+  };
 
   const isDateDisabled = (date: Date) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     if (date < today) {
-      return true
+      return true;
     }
     if (!selectedDoctor) {
-      return true
+      return true;
     }
-    return !isDoctorAvailableOnDate(selectedDoctor, formatDate(date))
-  }
+    return !isDoctorAvailableOnDate(selectedDoctor, formatDate(date));
+  };
 
   return (
     <div className="space-y-6">
@@ -114,7 +154,10 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
             <MagnifyingGlass size={18} className="inline mr-2" />
             Select Specialization
           </label>
-          <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+          <Select
+            value={selectedSpecialization}
+            onValueChange={setSelectedSpecialization}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Choose a specialization" />
             </SelectTrigger>
@@ -147,8 +190,8 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
                     key={doctor.id}
                     className={`cursor-pointer transition-all ${
                       selectedDoctor?.id === doctor.id
-                        ? 'ring-2 ring-primary'
-                        : 'hover:border-accent'
+                        ? "ring-2 ring-primary"
+                        : "hover:border-accent"
                     }`}
                     onClick={() => handleDoctorSelect(doctor.id)}
                   >
@@ -160,7 +203,9 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <CardTitle className="text-base">{doctor.name}</CardTitle>
+                          <CardTitle className="text-base">
+                            {doctor.name}
+                          </CardTitle>
                           <CardDescription className="text-xs">
                             {doctor.specialization}
                           </CardDescription>
@@ -181,7 +226,9 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
 
         {selectedDoctor && (
           <div>
-            <label className="text-sm font-semibold mb-2 block">Select Date</label>
+            <label className="text-sm font-semibold mb-2 block">
+              Select Date
+            </label>
             <div className="flex justify-center">
               <Calendar
                 mode="single"
@@ -205,16 +252,24 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
               {availableSlots.map((slot) => (
                 <Button
                   key={slot.time}
-                  variant={selectedTime === slot.time ? 'default' : 'outline'}
+                  variant={selectedTime === slot.time ? "default" : "outline"}
                   disabled={!slot.available}
                   onClick={() => setSelectedTime(slot.time)}
                   className="h-auto py-3"
                 >
                   <div className="flex items-center gap-2">
                     {slot.available ? (
-                      <CheckCircle size={16} weight="fill" className="text-accent" />
+                      <CheckCircle
+                        size={16}
+                        weight="fill"
+                        className="text-accent"
+                      />
                     ) : (
-                      <XCircle size={16} weight="fill" className="text-muted-foreground" />
+                      <XCircle
+                        size={16}
+                        weight="fill"
+                        className="text-muted-foreground"
+                      />
                     )}
                     <span className="text-sm">{slot.time}</span>
                   </div>
@@ -240,19 +295,20 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>
-              <span className="font-semibold">Doctor:</span> {selectedDoctor.name}
+              <span className="font-semibold">Doctor:</span>{" "}
+              {selectedDoctor.name}
             </p>
             <p>
-              <span className="font-semibold">Specialization:</span>{' '}
+              <span className="font-semibold">Specialization:</span>{" "}
               {selectedDoctor.specialization}
             </p>
             <p>
-              <span className="font-semibold">Date:</span>{' '}
-              {selectedDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
+              <span className="font-semibold">Date:</span>{" "}
+              {selectedDate.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </p>
             <p>
@@ -271,5 +327,5 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
         Book Appointment
       </Button>
     </div>
-  )
+  );
 }

@@ -1,50 +1,106 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { User, Appointment, AppointmentStatus } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { getStatusColor } from '@/lib/appointment-utils'
-import { toast } from 'sonner'
-import { SignOut, CalendarDots, Clock, UserCircle, CheckCircle, XCircle } from '@phosphor-icons/react'
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { User, Appointment, AppointmentStatus, Doctor } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getStatusColor } from "@/lib/appointment-utils";
+import { toast } from "sonner";
+import {
+  SignOut,
+  CalendarDots,
+  Clock,
+  UserCircle,
+  CheckCircle,
+  XCircle,
+} from "@phosphor-icons/react";
+import { appointmentsAPI } from "@/lib/api-client";
 
 interface DoctorDashboardProps {
-  user: User
-  onLogout: () => void
+  user: User;
+  doctor: Doctor;
+  onLogout: () => void;
 }
 
-export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps) {
-  const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
+export default function DoctorDashboard({
+  user,
+  doctor,
+  onLogout,
+}: DoctorDashboardProps) {
+  const queryClient = useQueryClient();
 
-  const myAppointments = appointments?.filter((apt) => apt.doctorId === user.id) || []
-  const pendingCount = myAppointments.filter((apt) => apt.status === 'pending').length
-  const acceptedCount = myAppointments.filter((apt) => apt.status === 'accepted').length
-  const completedCount = myAppointments.filter((apt) => apt.status === 'completed').length
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ["appointments", "my"],
+    queryFn: () => appointmentsAPI.getMyAppointments(),
+  });
 
-  const handleUpdateStatus = (appointmentId: string, newStatus: AppointmentStatus) => {
-    setAppointments((current) =>
-      (current || []).map((apt) =>
-        apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-      )
-    )
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: AppointmentStatus }) =>
+      appointmentsAPI.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
 
-    const statusMessages: Record<AppointmentStatus, string> = {
-      pending: 'Appointment marked as pending',
-      accepted: 'Appointment accepted',
-      rejected: 'Appointment rejected',
-      completed: 'Appointment marked as completed',
-    }
+  const myAppointments = appointments || [];
+  const pendingCount = myAppointments.filter(
+    (apt) => apt.status === "pending"
+  ).length;
+  const acceptedCount = myAppointments.filter(
+    (apt) => apt.status === "accepted"
+  ).length;
+  const completedCount = myAppointments.filter(
+    (apt) => apt.status === "completed"
+  ).length;
 
-    toast.success(statusMessages[newStatus])
+  const handleUpdateStatus = (
+    appointmentId: string,
+    newStatus: AppointmentStatus
+  ) => {
+    updateStatusMutation.mutate(
+      { id: appointmentId, status: newStatus },
+      {
+        onSuccess: () => {
+          const statusMessages: Record<AppointmentStatus, string> = {
+            pending: "Appointment marked as pending",
+            accepted: "Appointment accepted",
+            rejected: "Appointment rejected",
+            completed: "Appointment marked as completed",
+          };
+          toast.success(statusMessages[newStatus]);
+        },
+        onError: () => {
+          toast.error("Failed to update appointment status");
+        },
+      }
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
+      </div>
+    );
   }
 
-  const pendingAppointments = myAppointments.filter((apt) => apt.status === 'pending')
-  const upcomingAppointments = myAppointments.filter((apt) => apt.status === 'accepted')
+  const pendingAppointments = myAppointments.filter(
+    (apt) => apt.status === "pending"
+  );
+  const upcomingAppointments = myAppointments.filter(
+    (apt) => apt.status === "accepted"
+  );
   const pastAppointments = myAppointments.filter(
-    (apt) => apt.status === 'completed' || apt.status === 'rejected'
-  )
+    (apt) => apt.status === "completed" || apt.status === "rejected"
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
@@ -52,12 +108,16 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">CareConnect</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                CareConnect
+              </h1>
               <p className="text-sm text-muted-foreground">Doctor Portal</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {user.name}
+                </p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
               <Button variant="outline" size="icon" onClick={onLogout}>
@@ -93,7 +153,9 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
         <Card>
           <CardHeader>
             <CardTitle>Appointment Management</CardTitle>
-            <CardDescription>Review and manage your appointments</CardDescription>
+            <CardDescription>
+              Review and manage your appointments
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="pending">
@@ -112,7 +174,10 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
               <TabsContent value="pending" className="mt-6">
                 {pendingAppointments.length === 0 ? (
                   <div className="text-center py-12">
-                    <CalendarDots size={48} className="mx-auto text-muted-foreground mb-4" />
+                    <CalendarDots
+                      size={48}
+                      className="mx-auto text-muted-foreground mb-4"
+                    />
                     <p className="text-muted-foreground">No pending requests</p>
                   </div>
                 ) : (
@@ -132,8 +197,13 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
               <TabsContent value="upcoming" className="mt-6">
                 {upcomingAppointments.length === 0 ? (
                   <div className="text-center py-12">
-                    <CalendarDots size={48} className="mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No upcoming appointments</p>
+                    <CalendarDots
+                      size={48}
+                      className="mx-auto text-muted-foreground mb-4"
+                    />
+                    <p className="text-muted-foreground">
+                      No upcoming appointments
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -152,8 +222,13 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
               <TabsContent value="past" className="mt-6">
                 {pastAppointments.length === 0 ? (
                   <div className="text-center py-12">
-                    <CalendarDots size={48} className="mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No past appointments</p>
+                    <CalendarDots
+                      size={48}
+                      className="mx-auto text-muted-foreground mb-4"
+                    />
+                    <p className="text-muted-foreground">
+                      No past appointments
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -172,14 +247,14 @@ export default function DoctorDashboard({ user, onLogout }: DoctorDashboardProps
         </Card>
       </main>
     </div>
-  )
+  );
 }
 
 interface DoctorAppointmentCardProps {
-  appointment: Appointment
-  onUpdateStatus: (id: string, status: AppointmentStatus) => void
-  showActions?: boolean
-  showComplete?: boolean
+  appointment: Appointment;
+  onUpdateStatus: (id: string, status: AppointmentStatus) => void;
+  showActions?: boolean;
+  showComplete?: boolean;
 }
 
 function DoctorAppointmentCard({
@@ -188,7 +263,7 @@ function DoctorAppointmentCard({
   showActions,
   showComplete,
 }: DoctorAppointmentCardProps) {
-  const date = new Date(appointment.date)
+  const date = new Date(appointment.date);
 
   return (
     <Card>
@@ -201,7 +276,9 @@ function DoctorAppointmentCard({
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <CardTitle className="text-base">{appointment.patientName}</CardTitle>
+              <CardTitle className="text-base">
+                {appointment.patientName}
+              </CardTitle>
               <CardDescription className="text-xs">
                 <UserCircle size={14} className="inline mr-1" />
                 Patient
@@ -209,7 +286,8 @@ function DoctorAppointmentCard({
             </div>
           </div>
           <Badge className={getStatusColor(appointment.status)}>
-            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+            {appointment.status.charAt(0).toUpperCase() +
+              appointment.status.slice(1)}
           </Badge>
         </div>
       </CardHeader>
@@ -218,10 +296,10 @@ function DoctorAppointmentCard({
           <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarDots size={16} />
             <span>
-              {date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
+              {date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
               })}
             </span>
           </div>
@@ -235,7 +313,7 @@ function DoctorAppointmentCard({
           <div className="flex gap-2">
             <Button
               size="sm"
-              onClick={() => onUpdateStatus(appointment.id, 'accepted')}
+              onClick={() => onUpdateStatus(appointment.id, "accepted")}
               className="flex-1"
             >
               <CheckCircle size={16} className="mr-2" />
@@ -244,7 +322,7 @@ function DoctorAppointmentCard({
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => onUpdateStatus(appointment.id, 'rejected')}
+              onClick={() => onUpdateStatus(appointment.id, "rejected")}
               className="flex-1"
             >
               <XCircle size={16} className="mr-2" />
@@ -257,7 +335,7 @@ function DoctorAppointmentCard({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => onUpdateStatus(appointment.id, 'completed')}
+            onClick={() => onUpdateStatus(appointment.id, "completed")}
             className="w-full"
           >
             <CheckCircle size={16} className="mr-2" />
@@ -266,5 +344,5 @@ function DoctorAppointmentCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

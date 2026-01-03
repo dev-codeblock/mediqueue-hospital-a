@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useKV } from "@/hooks/use-kv";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Doctor } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,48 +31,80 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
-  generateId,
   SPECIALIZATIONS,
   DEFAULT_TIME_SLOTS,
   DAYS_OF_WEEK,
 } from "@/lib/appointment-utils";
 import { Plus, Pencil, Trash } from "@phosphor-icons/react";
+import { doctorsAPI } from "@/lib/api-client";
 
 export default function ManageDoctors() {
-  const [doctors, setDoctors] = useKV<Doctor[]>("doctors", []);
+  const queryClient = useQueryClient();
+
+  const { data: doctors = [], isLoading } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorsAPI.getAll(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: Omit<Doctor, "id">) => doctorsAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Doctor added successfully");
+      setIsAddDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to add doctor");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Doctor> }) =>
+      doctorsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Doctor updated successfully");
+      setEditingDoctor(null);
+    },
+    onError: () => {
+      toast.error("Failed to update doctor");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => doctorsAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Doctor removed");
+    },
+    onError: () => {
+      toast.error("Failed to remove doctor");
+    },
+  });
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
 
   const handleAddDoctor = (doctor: Omit<Doctor, "id">) => {
-    const newDoctor: Doctor = {
-      ...doctor,
-      id: generateId(),
-    };
-    setDoctors((current) => [...(current || []), newDoctor]);
-    toast.success("Doctor added successfully");
-    setIsAddDialogOpen(false);
+    createMutation.mutate(doctor);
   };
 
   const handleUpdateDoctor = (updatedDoctor: Doctor) => {
-    setDoctors((current) =>
-      (current || []).map((d) =>
-        d.id === updatedDoctor.id ? updatedDoctor : d
-      )
-    );
-    toast.success("Doctor updated successfully");
-    setEditingDoctor(null);
+    const { id, ...data } = updatedDoctor;
+    updateMutation.mutate({ id, data });
   };
 
   const handleDeleteDoctor = (doctorId: string) => {
-    setDoctors((current) => (current || []).filter((d) => d.id !== doctorId));
-    toast.success("Doctor removed");
+    if (confirm("Are you sure you want to delete this doctor?")) {
+      deleteMutation.mutate(doctorId);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {doctors?.length || 0} doctor(s) registered
+          {doctors.length} doctor(s) registered
         </p>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -93,7 +125,7 @@ export default function ManageDoctors() {
         </Dialog>
       </div>
 
-      {!doctors || doctors.length === 0 ? (
+      {doctors.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No doctors added yet</p>
           <p className="text-sm text-muted-foreground mt-1">

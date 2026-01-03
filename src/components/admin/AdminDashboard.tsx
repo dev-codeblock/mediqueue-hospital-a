@@ -1,26 +1,51 @@
-import { useState } from 'react'
-import { useKV } from '@/hooks/use-kv'
-import { User, Doctor, Appointment } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { SignOut, Users, CalendarDots, Stethoscope, Database } from '@phosphor-icons/react'
-import ManageDoctors from './ManageDoctors'
-import ViewAllAppointments from './ViewAllAppointments'
-import DatabaseStatus from './DatabaseStatus'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { User } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  SignOut,
+  Users,
+  CalendarDots,
+  Stethoscope,
+  Database,
+} from "@phosphor-icons/react";
+import ManageDoctors from "./ManageDoctors";
+import ViewAllAppointments from "./ViewAllAppointments";
+import DatabaseStatus from "./DatabaseStatus";
+import { doctorsAPI, appointmentsAPI } from "@/lib/api-client";
 
 interface AdminDashboardProps {
-  user: User
-  onLogout: () => void
+  user: User;
+  onLogout: () => void;
 }
 
-export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
-  const [doctors] = useKV<Doctor[]>('doctors', [])
-  const [appointments] = useKV<Appointment[]>('appointments', [])
+export default function AdminDashboard({
+  user,
+  onLogout,
+}: AdminDashboardProps) {
+  const { data: doctors = [] } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorsAPI.getAll(),
+  });
 
-  const totalDoctors = doctors?.length || 0
-  const totalAppointments = appointments?.length || 0
-  const pendingAppointments = appointments?.filter((apt) => apt.status === 'pending').length || 0
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: () => appointmentsAPI.getAll(),
+  });
+
+  const totalDoctors = doctors.length;
+  const totalAppointments = appointments.length;
+  const pendingAppointments = appointments.filter(
+    (apt) => apt.status === "pending"
+  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
@@ -28,12 +53,16 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">CareConnect</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                CareConnect
+              </h1>
               <p className="text-sm text-muted-foreground">Admin Portal</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {user.name}
+                </p>
                 <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
               <Button variant="outline" size="icon" onClick={onLogout}>
@@ -78,7 +107,9 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         <Card>
           <CardHeader>
             <CardTitle>System Management</CardTitle>
-            <CardDescription>Manage doctors, appointments, and database</CardDescription>
+            <CardDescription>
+              Manage doctors, appointments, and database
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="doctors">
@@ -113,5 +144,5 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         </Card>
       </main>
     </div>
-  )
+  );
 }

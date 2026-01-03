@@ -24,7 +24,11 @@ interface AuthContextType {
   user: User | null;
   doctor: Doctor | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    registerData?: { name: string }
+  ) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -59,7 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    registerData?: { name: string }
+  ) => {
+    // If registerData is provided, register first
+    if (registerData) {
+      await authAPI.register({
+        name: registerData.name,
+        email,
+        password,
+        role: "patient",
+      });
+    }
+
+    // Then login
     const response = await authAPI.login(email, password);
     const {
       token: newToken,
