@@ -2,14 +2,14 @@
 
 ## Overview
 
-CareConnect uses **Spark KV** (key-value store) as its persistent database. This is a browser-compatible, session-persistent storage system that maintains data across page refreshes and user sessions.
+CareConnect uses a **browser-based key-value store** as its persistent database. This is a browser-compatible, session-persistent storage system that maintains data across page refreshes and user sessions.
 
-## Why Spark KV Instead of MongoDB/Prisma?
+## Why Browser-Based KV Instead of MongoDB/Prisma?
 
-The Spark runtime is a **browser-based environment** that doesn't support Node.js-only packages like Prisma or direct database connections. Spark KV provides:
+The browser-based environment doesn't support Node.js-only packages like Prisma or direct database connections. Browser-based KV storage provides:
 
 - ✅ **Persistent storage** - Data survives page refreshes
-- ✅ **Browser-compatible** - Works in Spark's runtime environment
+- ✅ **Browser-compatible** - Works natively in the browser
 - ✅ **Type-safe** - Full TypeScript support
 - ✅ **Simple API** - Easy to use with React hooks
 - ✅ **Atomic updates** - Prevents race conditions
@@ -85,6 +85,7 @@ await initializeDatabase()
 ```
 
 Seeds the database with:
+
 - 3 demo users (1 admin, 1 doctor, 1 patient)
 - 5 doctors across different specializations
 - Empty appointments array
@@ -94,7 +95,7 @@ Seeds the database with:
 #### Using React Hooks (Preferred)
 
 ```typescript
-import { useKV } from '@github/spark/hooks'
+import { useKV } from '@/hooks/use-kv'
 
 // Reading data
 const [doctors] = useKV<Doctor[]>('doctors', [])
@@ -118,16 +119,16 @@ setAppointments((current) =>
 
 ```typescript
 // Get data
-const users = await spark.kv.get('users') as User[]
+const users = await kv.get('users') as User[]
 
 // Set data
-await spark.kv.set('users', updatedUsers)
+await kv.set('users', updatedUsers)
 
 // Delete key
-await spark.kv.delete('current-user')
+await kv.delete('current-user')
 
 // List all keys
-const allKeys = await spark.kv.keys()
+const allKeys = await kv.keys()
 ```
 
 ### Helper Functions
@@ -153,12 +154,14 @@ await resetDatabase()
 ### Demo Accounts
 
 **Admin Account:**
+
 ```
 Email: admin@care.com
 Role: admin
 ```
 
 **Doctor Account:**
+
 ```
 Email: doctor@care.com
 Name: Dr. Sarah Johnson
@@ -166,6 +169,7 @@ Specialization: Cardiology
 ```
 
 **Patient Account:**
+
 ```
 Email: patient@care.com
 Name: John Smith
@@ -205,16 +209,19 @@ Name: John Smith
 The system prevents conflicts through:
 
 1. **Availability Check**: Before booking
+
 ```typescript
 const slots = getAvailableSlots(doctor, date, appointments)
 ```
 
-2. **Validation**: Before saving
+1. **Validation**: Before saving
+
 ```typescript
 const { canBook, message } = canBookAppointment(doctor, date, time, appointments)
 ```
 
-3. **Atomic Updates**: Using functional state
+1. **Atomic Updates**: Using functional state
+
 ```typescript
 setAppointments((current) => [...current, newAppointment])
 ```
@@ -222,6 +229,7 @@ setAppointments((current) => [...current, newAppointment])
 ### Date Handling
 
 All dates use ISO format (`YYYY-MM-DD`):
+
 ```typescript
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0]
@@ -233,6 +241,7 @@ function formatDate(date: Date): string {
 ### Admin Dashboard → Database Tab
 
 Admins can:
+
 - View total counts (users, doctors, appointments)
 - See breakdown by role and status
 - Reset database to initial state
@@ -246,6 +255,7 @@ await resetDatabase()
 ```
 
 Resets to:
+
 - 3 demo accounts
 - 5 initial doctors
 - 0 appointments
@@ -269,7 +279,7 @@ setData(data.map(item =>
 ### 2. Handle Empty States
 
 ```typescript
-const users = await spark.kv.get('users') as User[] | undefined
+const users = await kv.get('users') as User[] | undefined
 const safeUsers = users || []
 ```
 
@@ -277,7 +287,7 @@ const safeUsers = users || []
 
 ```typescript
 // Always cast return values
-const data = await spark.kv.get('key') as TypeName | undefined
+const data = await kv.get('key') as TypeName | undefined
 ```
 
 ### 4. Validation Before Save
@@ -287,7 +297,7 @@ const data = await spark.kv.get('key') as TypeName | undefined
 if (!data.email || !data.name) {
   throw new Error('Missing required fields')
 }
-await spark.kv.set('users', data)
+await kv.set('users', data)
 ```
 
 ## Troubleshooting
@@ -312,14 +322,16 @@ await spark.kv.set('users', data)
 
 ## Migration from Mock Data
 
-This app previously used local state. Now all data is persisted in Spark KV:
+This app previously used local state. Now all data is persisted in browser-based KV storage:
 
 **Before:**
+
 ```typescript
 const [appointments, setAppointments] = useState<Appointment[]>([])
 ```
 
 **After:**
+
 ```typescript
 const [appointments, setAppointments] = useKV<Appointment[]>('appointments', [])
 ```

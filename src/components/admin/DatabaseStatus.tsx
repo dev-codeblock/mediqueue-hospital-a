@@ -35,7 +35,7 @@ export default function DatabaseStatus() {
       <Alert>
         <CheckCircle size={18} className="text-accent" />
         <AlertDescription>
-          Database is active and running on Spark KV persistent storage
+          Database is active and running on persistent storage
         </AlertDescription>
       </Alert>
 

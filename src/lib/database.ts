@@ -1,7 +1,6 @@
 import { User, Doctor, Appointment } from "./types";
 import { generateId, DEFAULT_TIME_SLOTS } from "./appointment-utils";
-
-declare const kv: any;
+import { kv } from "./kv-storage";
 
 export async function initializeDatabase() {
   const hasInitialized = (await kv.get("db-initialized")) as

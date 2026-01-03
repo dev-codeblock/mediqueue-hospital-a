@@ -2,7 +2,7 @@
 
 ## Overview
 
-This application has been upgraded from using temporary mock data to a **persistent database system** using Spark KV. All your data now survives page refreshes and browser sessions!
+This application has been upgraded from using temporary mock data to a **persistent database system** using browser-based KV storage. All your data now survives page refreshes and browser sessions!
 
 ## What Changed?
 
@@ -70,7 +70,7 @@ Name: John Smith
 
 ## Database Structure
 
-All data is stored in Spark KV with these keys:
+All data is stored in browser-based KV storage with these keys:
 
 ```
 users           → All registered users

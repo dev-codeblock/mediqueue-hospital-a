@@ -1,8 +1,9 @@
 # Planning Guide
 
-CareConnect is a comprehensive online hospital appointment system that eliminates double-booking, reduces wait times, and streamlines the connection between patients, doctors, and administrators through intelligent scheduling and real-time availability management. The application uses a persistent key-value database (Spark KV) to store all users, doctors, and appointments with automatic initialization of seed data.
+CareConnect is a comprehensive online hospital appointment system that eliminates double-booking, reduces wait times, and streamlines the connection between patients, doctors, and administrators through intelligent scheduling and real-time availability management. The application uses a persistent key-value database to store all users, doctors, and appointments with automatic initialization of seed data.
 
-**Experience Qualities**: 
+**Experience Qualities**:
+
 1. **Professional** - Instills trust through a clean, medical-grade interface that feels reliable and authoritative
 2. **Efficient** - Minimizes clicks and cognitive load, enabling quick appointment booking and management with clear visual feedback
 3. **Transparent** - Provides complete visibility into doctor availability, appointment status, and scheduling conflicts with honest, upfront communication
@@ -12,7 +13,7 @@ This system requires sophisticated role-based access control (patient/doctor/adm
 
 ## Data Persistence Architecture
 
-The application uses Spark KV (key-value store) as its persistent database with the following structure:
+The application uses a key-value store as its persistent database with the following structure:
 
 - **users**: Array of User objects containing patient, doctor, and admin accounts
 - **doctors**: Array of Doctor objects with schedules, specializations, and availability
@@ -21,6 +22,7 @@ The application uses Spark KV (key-value store) as its persistent database with 
 - **db-initialized**: Flag to prevent duplicate initialization
 
 On first load, the system automatically seeds the database with:
+
 - 3 demo users (1 admin, 1 doctor, 1 patient)
 - 5 doctors across different specializations with varied schedules
 - Empty appointments array ready for bookings
@@ -30,6 +32,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 ## Essential Features
 
 ### User Authentication & Role Management
+
 - **Functionality**: Secure login system with three distinct user roles (Patient, Doctor, Admin) each with tailored permissions and interfaces
 - **Purpose**: Ensures data privacy, provides appropriate access levels, and personalizes the experience for each user type
 - **Trigger**: User clicks "Login" or "Register" from landing page
@@ -37,6 +40,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: Users can only access features appropriate to their role; session persists across page refreshes
 
 ### Doctor Search & Discovery (Patient)
+
 - **Functionality**: Searchable directory of doctors filtered by specialization with real-time availability indicators
 - **Purpose**: Helps patients find the right specialist quickly and see immediate availability
 - **Trigger**: Patient clicks "Book Appointment" from dashboard
@@ -44,6 +48,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: Patients can discover doctors within 2 clicks; availability is accurate and real-time
 
 ### Intelligent Slot Booking (Patient)
+
 - **Functionality**: Calendar-based time slot selection that prevents double-booking and respects doctor limits
 - **Purpose**: Ensures zero scheduling conflicts and optimal resource utilization
 - **Trigger**: Patient selects a doctor
@@ -51,6 +56,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: No double-bookings ever occur; slot availability updates in real-time; clear messaging when slots are unavailable
 
 ### Appointment Management (Doctor)
+
 - **Functionality**: Dashboard showing all pending, accepted, and upcoming appointments with accept/reject controls
 - **Purpose**: Gives doctors control over their schedule and workload
 - **Trigger**: Doctor logs in or navigates to "My Appointments"
@@ -58,6 +64,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: Doctors can process requests within 3 clicks; status changes reflect immediately for patients
 
 ### Schedule Configuration (Admin)
+
 - **Functionality**: Interface to add/edit doctors, set available days, define time slots, and configure daily appointment limits
 - **Purpose**: Centralized control over hospital resources and scheduling capacity
 - **Trigger**: Admin selects "Manage Doctors" or "Configure Schedules"
@@ -65,6 +72,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: Admin can fully configure a doctor's schedule in under 2 minutes; changes apply immediately to patient-facing availability
 
 ### Appointment Status Tracking (Patient)
+
 - **Functionality**: Real-time view of all appointments with current status and doctor information
 - **Purpose**: Keeps patients informed and reduces uncertainty about appointment confirmations
 - **Trigger**: Patient navigates to "My Appointments"
@@ -72,6 +80,7 @@ All data modifications use functional updates with useKV hook to prevent race co
 - **Success criteria**: Status updates appear within seconds of doctor action; clear visual distinction between states
 
 ### Availability Management (Doctor)
+
 - **Functionality**: Toggle to mark specific days/times as unavailable
 - **Purpose**: Accommodates doctor vacations, emergencies, and schedule changes
 - **Trigger**: Doctor clicks "Manage Availability"
@@ -97,7 +106,7 @@ The design should evoke **trust, clarity, and medical professionalism** while re
 A sophisticated medical palette balancing professionalism with warmth:
 
 - **Primary Color**: Deep Medical Blue `oklch(0.45 0.12 250)` - Conveys trust, expertise, and medical authority; used for primary CTAs like "Book Appointment" and key navigation
-- **Secondary Colors**: 
+- **Secondary Colors**:
   - Soft Mint `oklch(0.94 0.04 160)` - Calming background color for secondary sections and cards
   - Warm Slate `oklch(0.35 0.02 240)` - Professional text and icons
 - **Accent Color**: Vibrant Teal `oklch(0.60 0.15 200)` - Energetic highlight for active states, accepted appointments, and success messages
