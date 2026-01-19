@@ -11,12 +11,28 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5000";
+
+// Allow multiple frontend origins (dev, preview, production)
+const allowedOrigins = [
+  "http://localhost:5000",
+  "http://localhost:5173", // Vite dev server
+  "http://localhost:4173", // Vite preview server
+  process.env.CLIENT_URL,
+].filter(Boolean);
 
 // Middleware
 app.use(
   cors({
-    origin: CLIENT_URL,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );

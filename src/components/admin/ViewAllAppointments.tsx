@@ -20,7 +20,7 @@ import {
 import { appointmentsAPI } from "@/lib/api-client";
 
 export default function ViewAllAppointments() {
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments, isLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => appointmentsAPI.getAll(),
   });
@@ -33,7 +33,9 @@ export default function ViewAllAppointments() {
     );
   }
 
-  const sortedAppointments = [...appointments].sort(
+  const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
+  const sortedAppointments = [...appointmentsList].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -50,7 +52,7 @@ export default function ViewAllAppointments() {
     (apt) => apt.status === "rejected"
   );
 
-  if (appointments.length === 0) {
+  if (appointmentsList.length === 0) {
     return (
       <div className="text-center py-12">
         <CalendarDots

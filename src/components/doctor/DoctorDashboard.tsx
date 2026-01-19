@@ -37,7 +37,7 @@ export default function DoctorDashboard({
 }: DoctorDashboardProps) {
   const queryClient = useQueryClient();
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments, isLoading } = useQuery({
     queryKey: ["appointments", "my"],
     queryFn: () => appointmentsAPI.getMyAppointments(),
   });
@@ -50,7 +50,15 @@ export default function DoctorDashboard({
     },
   });
 
-  const myAppointments = appointments || [];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
+      </div>
+    );
+  }
+
+  const myAppointments = Array.isArray(appointments) ? appointments : [];
   const pendingCount = myAppointments.filter(
     (apt) => apt.status === "pending"
   ).length;
@@ -83,14 +91,6 @@ export default function DoctorDashboard({
       }
     );
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
-      </div>
-    );
-  }
 
   const pendingAppointments = myAppointments.filter(
     (apt) => apt.status === "pending"

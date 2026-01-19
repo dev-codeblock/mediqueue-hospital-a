@@ -31,19 +31,30 @@ export default function AdminDashboard({
   user,
   onLogout,
 }: AdminDashboardProps) {
-  const { data: doctors = [] } = useQuery({
+  const { data: doctors, isLoading: loadingDoctors } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorsAPI.getAll(),
   });
 
-  const { data: appointments = [] } = useQuery({
+  const { data: appointments, isLoading: loadingAppointments } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => appointmentsAPI.getAll(),
   });
 
-  const totalDoctors = doctors.length;
-  const totalAppointments = appointments.length;
-  const pendingAppointments = appointments.filter(
+  if (loadingDoctors || loadingAppointments) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
+      </div>
+    );
+  }
+
+  const doctorsList = Array.isArray(doctors) ? doctors : [];
+  const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
+  const totalDoctors = doctorsList.length;
+  const totalAppointments = appointmentsList.length;
+  const pendingAppointments = appointmentsList.filter(
     (apt) => apt.status === "pending"
   ).length;
 

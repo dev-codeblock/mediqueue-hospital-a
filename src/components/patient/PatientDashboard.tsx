@@ -26,12 +26,12 @@ export default function PatientDashboard({
 }: PatientDashboardProps) {
   const [activeTab, setActiveTab] = useState("book");
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments, isLoading } = useQuery({
     queryKey: ["appointments", "my"],
     queryFn: () => appointmentsAPI.getMyAppointments(),
   });
 
-  const myAppointments = appointments || [];
+  const myAppointments = Array.isArray(appointments) ? appointments : [];
   const upcomingCount = myAppointments.filter(
     (apt) => apt.status === "accepted" || apt.status === "pending"
   ).length;

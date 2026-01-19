@@ -42,12 +42,12 @@ interface BookAppointmentProps {
 export default function BookAppointment({ user }: BookAppointmentProps) {
   const queryClient = useQueryClient();
 
-  const { data: doctors = [], isLoading: loadingDoctors } = useQuery({
+  const { data: doctors, isLoading: loadingDoctors } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorsAPI.getAll(),
   });
 
-  const { data: appointments = [] } = useQuery({
+  const { data: appointments } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => appointmentsAPI.getAll(),
   });
@@ -67,12 +67,14 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
+  const doctorsList = Array.isArray(doctors) ? doctors : [];
+
   const filteredDoctors = selectedSpecialization
-    ? doctors.filter((d) => d.specialization === selectedSpecialization)
+    ? doctorsList.filter((d) => d.specialization === selectedSpecialization)
     : [];
 
   const handleDoctorSelect = async (doctorId: string) => {
-    const doctor = doctors.find((d) => d.id === doctorId);
+    const doctor = doctorsList.find((d) => d.id === doctorId);
     setSelectedDoctor(doctor || null);
     setSelectedDate(undefined);
     setSelectedTime("");
@@ -145,12 +147,18 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
     }
     return !isDoctorAvailableOnDate(selectedDoctor, formatDate(date));
   };
-
+  if (loadingDoctors) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-8 h-8 border-b-2 rounded-full animate-spin border-primary"></div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-semibold mb-2 block">
+          <label className="block mb-2 text-sm font-semibold">
             <MagnifyingGlass size={18} className="inline mr-2" />
             Select Specialization
           </label>
@@ -173,7 +181,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
 
         {selectedSpecialization && (
           <div>
-            <label className="text-sm font-semibold mb-2 block">
+            <label className="block mb-2 text-sm font-semibold">
               <Stethoscope size={18} className="inline mr-2" />
               Select Doctor
             </label>
@@ -226,7 +234,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
 
         {selectedDoctor && (
           <div>
-            <label className="text-sm font-semibold mb-2 block">
+            <label className="block mb-2 text-sm font-semibold">
               Select Date
             </label>
             <div className="flex justify-center">
@@ -236,7 +244,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
                 onSelect={handleDateSelect}
                 disabled={isDateDisabled}
                 fromDate={new Date()}
-                className="rounded-md border"
+                className="border rounded-md"
               />
             </div>
           </div>
@@ -244,11 +252,11 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
 
         {selectedDate && availableSlots.length > 0 && (
           <div>
-            <label className="text-sm font-semibold mb-2 block">
+            <label className="block mb-2 text-sm font-semibold">
               <Clock size={18} className="inline mr-2" />
               Select Time Slot
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {availableSlots.map((slot) => (
                 <Button
                   key={slot.time}

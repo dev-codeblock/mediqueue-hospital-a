@@ -41,7 +41,7 @@ import { doctorsAPI } from "@/lib/api-client";
 export default function ManageDoctors() {
   const queryClient = useQueryClient();
 
-  const { data: doctors = [], isLoading } = useQuery({
+  const { data: doctors, isLoading } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorsAPI.getAll(),
   });
@@ -100,11 +100,13 @@ export default function ManageDoctors() {
     }
   };
 
+  const doctorsList = Array.isArray(doctors) ? doctors : [];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {doctors.length} doctor(s) registered
+          {doctorsList.length} doctor(s) registered
         </p>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -125,7 +127,7 @@ export default function ManageDoctors() {
         </Dialog>
       </div>
 
-      {doctors.length === 0 ? (
+      {doctorsList.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No doctors added yet</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -134,7 +136,7 @@ export default function ManageDoctors() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {doctors.map((doctor) => (
+          {doctorsList.map((doctor) => (
             <Card key={doctor.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">
