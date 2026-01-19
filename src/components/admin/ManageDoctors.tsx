@@ -35,13 +35,13 @@ import {
   DEFAULT_TIME_SLOTS,
   DAYS_OF_WEEK,
 } from "@/lib/appointment-utils";
-import { Plus, Pencil, Trash } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash as TrashIcon } from "@phosphor-icons/react";
 import { doctorsAPI } from "@/lib/api-client";
 
 export default function ManageDoctors() {
   const queryClient = useQueryClient();
 
-  const { data: doctors, isLoading } = useQuery({
+  const { data: doctors = [], isLoading } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorsAPI.getAll(),
   });
@@ -90,8 +90,10 @@ export default function ManageDoctors() {
   };
 
   const handleUpdateDoctor = (updatedDoctor: Doctor) => {
-    const { id, ...data } = updatedDoctor;
-    updateMutation.mutate({ id, data });
+    // console.log(updatedDoctor);
+    const { _id, ...data } = updatedDoctor;
+    console.log(_id, data);
+    updateMutation.mutate({ id: _id, data });
   };
 
   const handleDeleteDoctor = (doctorId: string) => {
@@ -100,13 +102,11 @@ export default function ManageDoctors() {
     }
   };
 
-  const doctorsList = Array.isArray(doctors) ? doctors : [];
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {doctorsList.length} doctor(s) registered
+          {doctors.length} doctor(s) registered
         </p>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -127,20 +127,20 @@ export default function ManageDoctors() {
         </Dialog>
       </div>
 
-      {doctorsList.length === 0 ? (
-        <div className="text-center py-12">
+      {doctors.length === 0 ? (
+        <div className="py-12 text-center">
           <p className="text-muted-foreground">No doctors added yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Click "Add Doctor" to get started
           </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {doctorsList.map((doctor) => (
-            <Card key={doctor.id}>
+          {doctors.map((doctor: Doctor, index: number) => (
+            <Card key={doctor._id || `doctor-${index}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 flex-1">
+                  <div className="flex items-start flex-1 gap-3">
                     <Avatar>
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {doctor.name.charAt(0)}
@@ -159,46 +159,47 @@ export default function ManageDoctors() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                <div className="mb-4 space-y-2 text-xs text-muted-foreground">
                   <p>Max appointments/day: {doctor.maxAppointmentsPerDay}</p>
                   <p>Available days: {doctor.availableDays.length} day(s)</p>
                   <p>Time slots: {doctor.availableTimeSlots.length} slot(s)</p>
                 </div>
                 <div className="flex gap-2">
-                  <Dialog
-                    open={editingDoctor?.id === doctor.id}
-                    onOpenChange={(open) => !open && setEditingDoctor(null)}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEditingDoctor(doctor)}
                   >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingDoctor(doctor)}
-                      >
-                        <Pencil size={16} className="mr-2" />
-                        Edit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Edit Doctor</DialogTitle>
-                        <DialogDescription>
-                          Update doctor details and availability
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DoctorForm
-                        initialData={doctor}
-                        onSubmit={handleUpdateDoctor}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                    <PencilSimple size={16} className="mr-2" />
+                    Edit
+                  </Button>
+                  {editingDoctor && editingDoctor?._id === doctor._id && (
+                    <Dialog
+                      open={editingDoctor?._id === doctor._id}
+                      onOpenChange={(open) => !open && setEditingDoctor(null)}
+                    >
+                      <DialogTrigger asChild></DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Edit Doctor</DialogTitle>
+                          <DialogDescription>
+                            Update doctor details and availability
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DoctorForm
+                          initialData={doctor}
+                          onSubmit={handleUpdateDoctor}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  )}
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDeleteDoctor(doctor.id)}
+                    onClick={() => handleDeleteDoctor(doctor._id)}
                   >
-                    <Trash size={16} />
+                    <TrashIcon size={16} />
                   </Button>
                 </div>
               </CardContent>
@@ -219,16 +220,16 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
   const [name, setName] = useState(initialData?.name || "");
   const [email, setEmail] = useState(initialData?.email || "");
   const [specialization, setSpecialization] = useState(
-    initialData?.specialization || ""
+    initialData?.specialization || "",
   );
   const [maxAppointments, setMaxAppointments] = useState(
-    initialData?.maxAppointmentsPerDay.toString() || "10"
+    initialData?.maxAppointmentsPerDay.toString() || "10",
   );
   const [selectedDays, setSelectedDays] = useState<number[]>(
-    initialData?.availableDays || [1, 2, 3, 4, 5]
+    initialData?.availableDays || [1, 2, 3, 4, 5],
   );
   const [selectedSlots, setSelectedSlots] = useState<string[]>(
-    initialData?.availableTimeSlots || DEFAULT_TIME_SLOTS
+    initialData?.availableTimeSlots || DEFAULT_TIME_SLOTS,
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -245,7 +246,7 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
     }
 
     const doctorData = {
-      ...(initialData?.id && { id: initialData.id }),
+      ...(initialData?._id && { _id: initialData._id }),
       name,
       email,
       specialization,
@@ -262,7 +263,7 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
     setSelectedDays((current) =>
       current.includes(day)
         ? current.filter((d) => d !== day)
-        : [...current, day]
+        : [...current, day],
     );
   };
 
@@ -270,7 +271,7 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
     setSelectedSlots((current) =>
       current.includes(slot)
         ? current.filter((s) => s !== slot)
-        : [...current, slot]
+        : [...current, slot],
     );
   };
 
@@ -354,7 +355,7 @@ function DoctorForm({ initialData, onSubmit }: DoctorFormProps) {
 
         <div className="space-y-2">
           <Label>Available Time Slots</Label>
-          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 border rounded-md">
+          <div className="grid grid-cols-3 gap-2 p-2 overflow-y-auto border rounded-md max-h-48">
             {DEFAULT_TIME_SLOTS.map((slot) => (
               <div key={slot} className="flex items-center space-x-2">
                 <Checkbox

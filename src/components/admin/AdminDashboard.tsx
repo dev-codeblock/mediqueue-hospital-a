@@ -31,37 +31,26 @@ export default function AdminDashboard({
   user,
   onLogout,
 }: AdminDashboardProps) {
-  const { data: doctors, isLoading: loadingDoctors } = useQuery({
+  const { data: doctors = [] } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorsAPI.getAll(),
   });
 
-  const { data: appointments, isLoading: loadingAppointments } = useQuery({
+  const { data: appointments = [] } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => appointmentsAPI.getAll(),
   });
 
-  if (loadingDoctors || loadingAppointments) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
-      </div>
-    );
-  }
-
-  const doctorsList = Array.isArray(doctors) ? doctors : [];
-  const appointmentsList = Array.isArray(appointments) ? appointments : [];
-
-  const totalDoctors = doctorsList.length;
-  const totalAppointments = appointmentsList.length;
-  const pendingAppointments = appointmentsList.filter(
-    (apt) => apt.status === "pending"
+  const totalDoctors = doctors.length;
+  const totalAppointments = appointments.length;
+  const pendingAppointments = appointments.filter(
+    (apt) => apt.status === "pending",
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-linear-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
+      <header className="sticky top-0 z-10 border-b bg-card border-border">
+        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
@@ -70,7 +59,7 @@ export default function AdminDashboard({
               <p className="text-sm text-muted-foreground">Admin Portal</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
+              <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-foreground">
                   {user.name}
                 </p>
@@ -84,12 +73,12 @@ export default function AdminDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid gap-6 mb-8 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Total Doctors</CardDescription>
-              <CardTitle className="text-3xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-3xl">
                 <Stethoscope size={32} className="text-primary" />
                 {totalDoctors}
               </CardTitle>
@@ -98,7 +87,7 @@ export default function AdminDashboard({
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Total Appointments</CardDescription>
-              <CardTitle className="text-3xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-3xl">
                 <CalendarDots size={32} className="text-accent" />
                 {totalAppointments}
               </CardTitle>
@@ -107,7 +96,7 @@ export default function AdminDashboard({
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Pending Approvals</CardDescription>
-              <CardTitle className="text-3xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-3xl">
                 <Users size={32} className="text-[oklch(0.75_0.15_80)]" />
                 {pendingAppointments}
               </CardTitle>

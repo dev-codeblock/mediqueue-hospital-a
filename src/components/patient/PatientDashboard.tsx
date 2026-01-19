@@ -26,20 +26,20 @@ export default function PatientDashboard({
 }: PatientDashboardProps) {
   const [activeTab, setActiveTab] = useState("book");
 
-  const { data: appointments, isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments", "my"],
     queryFn: () => appointmentsAPI.getMyAppointments(),
   });
 
-  const myAppointments = Array.isArray(appointments) ? appointments : [];
+  const myAppointments = appointments || [];
   const upcomingCount = myAppointments.filter(
-    (apt) => apt.status === "accepted" || apt.status === "pending"
+    (apt) => apt.status === "accepted" || apt.status === "pending",
   ).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-linear-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
+      <header className="sticky top-0 z-10 border-b bg-card border-border">
+        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
@@ -48,7 +48,7 @@ export default function PatientDashboard({
               <p className="text-sm text-muted-foreground">Patient Portal</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
+              <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-foreground">
                   {user.name}
                 </p>
@@ -62,8 +62,8 @@ export default function PatientDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid gap-6 mb-8 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Upcoming Appointments</CardDescription>

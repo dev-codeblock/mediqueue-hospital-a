@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { Doctor } from "./types";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:4000/api";
@@ -28,7 +29,7 @@ api.interceptors.response.use(
       window.location.href = "/";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
@@ -46,7 +47,7 @@ export const authAPI = {
 
 // Users API
 export const usersAPI = {
-  getAll: () => api.get("/users"),
+  getAll: () => api.get("/users").then((response) => response.data),
   create: (data: any) => api.post("/users", data),
   update: (id: string, data: any) => api.put(`/users/${id}`, data),
   delete: (id: string) => api.delete(`/users/${id}`),
@@ -54,10 +55,13 @@ export const usersAPI = {
 
 // Doctors API
 export const doctorsAPI = {
-  getAll: () => api.get("/doctors"),
-  getById: (id: string) => api.get(`/doctors/${id}`),
+  getAll: () => api.get<Doctor[]>("/doctors").then((response) => response.data),
+  getById: (id: string) =>
+    api.get<Doctor>(`/doctors/${id}`).then((response) => response.data),
   getAvailableSlots: (id: string, date: string) =>
-    api.get(`/doctors/${id}/available-slots`, { params: { date } }),
+    api
+      .get(`/doctors/${id}/available-slots`, { params: { date } })
+      .then((response) => response.data),
   create: (data: any) => api.post("/doctors", data),
   update: (id: string, data: any) => api.put(`/doctors/${id}`, data),
   delete: (id: string) => api.delete(`/doctors/${id}`),
@@ -65,8 +69,11 @@ export const doctorsAPI = {
 
 // Appointments API
 export const appointmentsAPI = {
-  getAll: () => api.get("/appointments"),
-  getById: (id: string) => api.get(`/appointments/${id}`),
+  getAll: () => api.get("/appointments").then((response) => response.data),
+  getById: (id: string) =>
+    api.get(`/appointments/${id}`).then((response) => response.data),
+  getMyAppointments: () =>
+    api.get("/appointments").then((response) => response.data),
   create: (data: any) => api.post("/appointments", data),
   updateStatus: (id: string, status: string) =>
     api.patch(`/appointments/${id}/status`, { status }),

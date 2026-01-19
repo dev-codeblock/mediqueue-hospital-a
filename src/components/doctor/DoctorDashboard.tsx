@@ -37,7 +37,7 @@ export default function DoctorDashboard({
 }: DoctorDashboardProps) {
   const queryClient = useQueryClient();
 
-  const { data: appointments, isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments", "my"],
     queryFn: () => appointmentsAPI.getMyAppointments(),
   });
@@ -50,28 +50,20 @@ export default function DoctorDashboard({
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
-      </div>
-    );
-  }
-
-  const myAppointments = Array.isArray(appointments) ? appointments : [];
+  const myAppointments = appointments || [];
   const pendingCount = myAppointments.filter(
-    (apt) => apt.status === "pending"
+    (apt) => apt.status === "pending",
   ).length;
   const acceptedCount = myAppointments.filter(
-    (apt) => apt.status === "accepted"
+    (apt) => apt.status === "accepted",
   ).length;
   const completedCount = myAppointments.filter(
-    (apt) => apt.status === "completed"
+    (apt) => apt.status === "completed",
   ).length;
 
   const handleUpdateStatus = (
     appointmentId: string,
-    newStatus: AppointmentStatus
+    newStatus: AppointmentStatus,
   ) => {
     updateStatusMutation.mutate(
       { id: appointmentId, status: newStatus },
@@ -88,24 +80,32 @@ export default function DoctorDashboard({
         onError: () => {
           toast.error("Failed to update appointment status");
         },
-      }
+      },
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-12 h-12 border-b-2 rounded-full animate-spin border-primary"></div>
+      </div>
+    );
+  }
+
   const pendingAppointments = myAppointments.filter(
-    (apt) => apt.status === "pending"
+    (apt) => apt.status === "pending",
   );
   const upcomingAppointments = myAppointments.filter(
-    (apt) => apt.status === "accepted"
+    (apt) => apt.status === "accepted",
   );
   const pastAppointments = myAppointments.filter(
-    (apt) => apt.status === "completed" || apt.status === "rejected"
+    (apt) => apt.status === "completed" || apt.status === "rejected",
   );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[oklch(0.96_0.02_200)] via-background to-[oklch(0.96_0.03_250)]">
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="sticky top-0 z-10 border-b bg-card border-border">
+        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
@@ -114,7 +114,7 @@ export default function DoctorDashboard({
               <p className="text-sm text-muted-foreground">Doctor Portal</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
+              <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-foreground">
                   {user.name}
                 </p>
@@ -128,8 +128,8 @@ export default function DoctorDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid gap-6 mb-8 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Pending Requests</CardDescription>
@@ -173,10 +173,10 @@ export default function DoctorDashboard({
 
               <TabsContent value="pending" className="mt-6">
                 {pendingAppointments.length === 0 ? (
-                  <div className="text-center py-12">
+                  <div className="py-12 text-center">
                     <CalendarDots
                       size={48}
-                      className="mx-auto text-muted-foreground mb-4"
+                      className="mx-auto mb-4 text-muted-foreground"
                     />
                     <p className="text-muted-foreground">No pending requests</p>
                   </div>
@@ -196,10 +196,10 @@ export default function DoctorDashboard({
 
               <TabsContent value="upcoming" className="mt-6">
                 {upcomingAppointments.length === 0 ? (
-                  <div className="text-center py-12">
+                  <div className="py-12 text-center">
                     <CalendarDots
                       size={48}
-                      className="mx-auto text-muted-foreground mb-4"
+                      className="mx-auto mb-4 text-muted-foreground"
                     />
                     <p className="text-muted-foreground">
                       No upcoming appointments
@@ -221,10 +221,10 @@ export default function DoctorDashboard({
 
               <TabsContent value="past" className="mt-6">
                 {pastAppointments.length === 0 ? (
-                  <div className="text-center py-12">
+                  <div className="py-12 text-center">
                     <CalendarDots
                       size={48}
-                      className="mx-auto text-muted-foreground mb-4"
+                      className="mx-auto mb-4 text-muted-foreground"
                     />
                     <p className="text-muted-foreground">
                       No past appointments
@@ -269,7 +269,7 @@ function DoctorAppointmentCard({
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1">
+          <div className="flex items-start flex-1 gap-3">
             <Avatar>
               <AvatarFallback className="bg-accent text-accent-foreground">
                 {appointment.patientName.charAt(0)}
@@ -292,7 +292,7 @@ function DoctorAppointmentCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarDots size={16} />
             <span>

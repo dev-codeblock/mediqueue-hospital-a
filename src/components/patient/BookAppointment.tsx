@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { User, Doctor, Appointment } from "@/lib/types";
+import { User, Doctor, Appointment, TimeSlot } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -65,7 +65,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
 
   const doctorsList = Array.isArray(doctors) ? doctors : [];
 
@@ -74,7 +74,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
     : [];
 
   const handleDoctorSelect = async (doctorId: string) => {
-    const doctor = doctorsList.find((d) => d.id === doctorId);
+    const doctor = doctorsList.find((d) => d._id === doctorId);
     setSelectedDoctor(doctor || null);
     setSelectedDate(undefined);
     setSelectedTime("");
@@ -88,7 +88,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
     if (date && selectedDoctor) {
       try {
         const slots = await doctorsAPI.getAvailableSlots(
-          selectedDoctor.id,
+          selectedDoctor._id,
           formatDate(date)
         );
         setAvailableSlots(slots);
@@ -111,7 +111,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
 
     createAppointmentMutation.mutate(
       {
-        doctorId: selectedDoctor.id,
+        doctorId: selectedDoctor._id,
         date: dateStr,
         time: selectedTime,
       },
@@ -195,13 +195,13 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 {filteredDoctors.map((doctor) => (
                   <Card
-                    key={doctor.id}
+                    key={doctor._id}
                     className={`cursor-pointer transition-all ${
-                      selectedDoctor?.id === doctor.id
+                      selectedDoctor?._id === doctor._id
                         ? "ring-2 ring-primary"
                         : "hover:border-accent"
                     }`}
-                    onClick={() => handleDoctorSelect(doctor.id)}
+                    onClick={() => handleDoctorSelect(doctor._id)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">

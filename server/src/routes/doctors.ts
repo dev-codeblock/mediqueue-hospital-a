@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 const router = express.Router();
 
 // Get all doctors (public)
-router.get('/', async (_req, res: Response) => {
+router.get("/", async (_req, res: Response) => {
   try {
     const doctors = await Doctor.find().sort({ name: 1 });
     res.json(doctors);
@@ -78,7 +78,7 @@ router.get("/:id/available-slots", async (req, res: Response) => {
     // Filter out booked slots
     const bookedTimes = appointments.map((apt) => apt.time);
     const availableSlots = doctor.availableTimeSlots.filter(
-      (slot) => !bookedTimes.includes(slot)
+      (slot) => !bookedTimes.includes(slot),
     );
 
     res.json({ availableSlots });
@@ -153,7 +153,7 @@ router.post(
       console.error("Create doctor error:", error);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
 // Update doctor (admin only)
@@ -201,7 +201,7 @@ router.put(
       console.error("Update doctor error:", error);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
 // Delete doctor (admin only)
@@ -225,7 +225,7 @@ router.delete(
       console.error("Delete doctor error:", error);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
 export default router;

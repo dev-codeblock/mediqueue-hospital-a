@@ -20,7 +20,7 @@ import {
 import { appointmentsAPI } from "@/lib/api-client";
 
 export default function ViewAllAppointments() {
-  const { data: appointments, isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => appointmentsAPI.getAll(),
   });
@@ -33,31 +33,29 @@ export default function ViewAllAppointments() {
     );
   }
 
-  const appointmentsList = Array.isArray(appointments) ? appointments : [];
-
-  const sortedAppointments = [...appointmentsList].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  const sortedAppointments = [...appointments].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   const pendingAppointments = sortedAppointments.filter(
-    (apt) => apt.status === "pending"
+    (apt) => apt.status === "pending",
   );
   const acceptedAppointments = sortedAppointments.filter(
-    (apt) => apt.status === "accepted"
+    (apt) => apt.status === "accepted",
   );
   const completedAppointments = sortedAppointments.filter(
-    (apt) => apt.status === "completed"
+    (apt) => apt.status === "completed",
   );
   const rejectedAppointments = sortedAppointments.filter(
-    (apt) => apt.status === "rejected"
+    (apt) => apt.status === "rejected",
   );
 
-  if (appointmentsList.length === 0) {
+  if (appointments.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <CalendarDots
           size={48}
-          className="mx-auto text-muted-foreground mb-4"
+          className="mx-auto mb-4 text-muted-foreground"
         />
         <p className="text-muted-foreground">No appointments in the system</p>
       </div>
@@ -112,7 +110,7 @@ export default function ViewAllAppointments() {
 function AppointmentList({ appointments }: { appointments: Appointment[] }) {
   if (appointments.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-muted-foreground">No appointments found</p>
       </div>
     );
@@ -133,8 +131,8 @@ function AdminAppointmentCard({ appointment }: { appointment: Appointment }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-6 flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start flex-1 gap-6">
             <div className="flex items-start gap-3">
               <Avatar>
                 <AvatarFallback className="bg-accent text-accent-foreground">
