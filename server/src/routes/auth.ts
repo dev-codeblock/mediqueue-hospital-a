@@ -13,6 +13,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 // Login
 router.post("/login", async (req, res: Response) => {
+  console.log("Login attempt:", req.body);
   try {
     const { email, password } = req.body;
 
@@ -36,7 +37,7 @@ router.post("/login", async (req, res: Response) => {
     const token = jwt.sign(
       { userId: user._id.toString(), role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN } as any
+      { expiresIn: JWT_EXPIRES_IN } as any,
     );
 
     // Get doctor info if user is a doctor
@@ -69,9 +70,10 @@ router.post("/login", async (req, res: Response) => {
 
 // Register (for patients)
 router.post("/register", async (req, res: Response) => {
+  console.log(req.body.name);
   try {
-    const { name, email, password } = req.body;
-
+    const { name, email, password } = req.body.name;
+    console.log(name, email, password);
     if (!name || !email || !password) {
       res.status(400).json({ error: "Name, email, and password are required" });
       return;
@@ -95,7 +97,7 @@ router.post("/register", async (req, res: Response) => {
     const token = jwt.sign(
       { userId: user._id.toString(), role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN } as any
+      { expiresIn: JWT_EXPIRES_IN } as any,
     );
 
     res.status(201).json({
@@ -109,6 +111,7 @@ router.post("/register", async (req, res: Response) => {
       },
     });
   } catch (error) {
+    console.log("Registration error:", error);
     console.error("Registration error:", error);
     res.status(500).json({ error: "Server error" });
   }
@@ -150,7 +153,7 @@ router.get(
       console.error("Session error:", error);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
 export default router;
