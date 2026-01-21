@@ -95,10 +95,10 @@ router.post(
   authorize("admin"),
   async (req: AuthRequest, res: Response) => {
     try {
+      console.log(req.body);
       const {
         name,
         email,
-        password,
         specialization,
         availableDays,
         availableTimeSlots,
@@ -109,7 +109,6 @@ router.post(
       if (
         !name ||
         !email ||
-        !password ||
         !specialization ||
         !availableDays ||
         !availableTimeSlots ||
@@ -127,7 +126,7 @@ router.post(
       }
 
       // Create user account for doctor
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash("password123", 10);
       const user = await User.create({
         name,
         email: email.toLowerCase(),

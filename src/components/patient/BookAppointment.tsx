@@ -89,7 +89,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
       try {
         const slots = await doctorsAPI.getAvailableSlots(
           selectedDoctor._id,
-          formatDate(date)
+          formatDate(date),
         );
         setAvailableSlots(slots);
       } catch (error) {
@@ -118,7 +118,7 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
       {
         onSuccess: () => {
           toast.success(
-            "Appointment request sent! Waiting for doctor approval."
+            "Appointment request sent! Waiting for doctor approval.",
           );
           setSelectedSpecialization("");
           setSelectedDoctor(null);
@@ -128,23 +128,29 @@ export default function BookAppointment({ user }: BookAppointmentProps) {
         },
         onError: (error: any) => {
           toast.error(
-            error.response?.data?.message || "Failed to book appointment"
+            error.response?.data?.message || "Failed to book appointment",
           );
         },
-      }
+      },
     );
   };
 
   const isDateDisabled = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
 
+    // Disable past dates
     if (date < today) {
       return true;
     }
+
+    // If no doctor selected, shouldn't reach here as calendar is conditionally rendered
     if (!selectedDoctor) {
-      return true;
+      return false;
     }
+
+    // Check if doctor is available on this date
     return !isDoctorAvailableOnDate(selectedDoctor, formatDate(date));
   };
   if (loadingDoctors) {
